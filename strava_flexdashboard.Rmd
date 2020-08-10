@@ -1,0 +1,164 @@
+---
+title: "Strava Running Data Analysis"
+runtime: shiny
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+    social: menu
+    source_code: https://github.com/evangelp/strava_project
+    theme: simplex
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard) # devtools::install_github('rstudio/flexdashboard')
+library(shiny)
+library(dplyr) 
+library(ggplot2) # devtools::install_github('hadley/ggplot2')
+library(lubridate)
+library(wesanderson)
+library(colorspace)
+library(plotly) # devtools::install_github('ropensci/plotly')
+library(rsconnect)
+
+df <- readRDS("strava_df.rds")
+
+
+```
+
+
+
+Sidebar {.sidebar}
+======================================================================
+This flexdashboard displays my personal activity data from Strava, a social media app to upload any outdoor activities such as running, hiking, swimming, etc. Hover over points on the main plot to see individual dates, mileage and time. The table also displays each individual run activity and attritubes such as the time and maximum heart rate.
+
+The main goal of this was: to visualize patterns in my running as a motivator to get back into running and to start learning dashboard visualizations. My mileage has never consistently increased save for preparation for the LA Marathon. I also seem to really dislike running on Mondays pretty consistently between now and 2018.
+
+I hope to extend this project further into a more reactive Shiny application, hopefully increase my mileage in the meantime and see if I can get myself to run earlier in the week!
+
+Author: Evangel Penumaka
+======================================================================
+Row
+-----------------------------------------------------------------------
+
+### Mileage Over the Years (2018 to current)
+
+```{r}
+# clean data
+
+df_clean <- df %>%
+  mutate(
+    date = as_date(start_date),
+    year = year(start_date), 
+    month = month(start_date, label = T), 
+    day = day(start_date),
+    day_week = wday(start_date, label = T),
+    miles = distance * 0.62137, #distance is in km,
+    miles = round(miles, 2),
+    time = elapsed_time/60/60,
+    total_time = seconds_to_period(elapsed_time)
+    ) %>%
+  filter(
+    year %in% c(2018:2020), 
+    type == "Run"
+    )  
+
+```
+
+
+```{r, echo = F}
+
+
+miles_graph <- ggplot(df_clean, aes(x = date, y = miles,
+                                    color = miles,
+                                    text = paste("Date: " , date,
+                                       "<br>Miles: ", miles,
+                                       "<br>Time: ", total_time))) + 
+  geom_point(position = "jitter") +
+  theme_classic() + 
+  scale_color_continuous_sequential(palette = "SunsetDark") + 
+  guides(color = F) +
+  labs(x = "Date", y = "Miles", title = "Total Mileage for Each Individual Run From 2018. Darker colors indicate higher mileage") +
+  theme(
+    text = element_text(size = 10),
+    axis.title = element_text(hjust = 1)
+  ) +
+  annotate(
+    "text",
+    x = as_date("2018-02-04"), y = 15,
+    label = "Huntington \n Half Marathon",
+    size = 3
+  ) +
+  annotate(
+    "text",
+    x = as_date("2018-05-06"), y = 11,
+    label = "OC Half Marathon",
+    size = 3
+  ) +
+  annotate(
+    "text",
+    x = as_date("2018-10-07"), y = 15.2,
+    label = "Long Beach \n Half Marathon",
+    size = 3
+  ) +
+  annotate(
+    "text",
+    x = as_date("2019-10-08"), y = 15,
+    label = "Long Beach \n Half Marathon",
+    size = 3
+  ) +
+  annotate(
+    "text",
+    x = as_date("2020-03-08"), y = 27.8,
+    label = "Los Angeles Marathon",
+    size = 3
+  ) 
+
+
+ggplotly(miles_graph, tooltip = "text") 
+
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Miles Per Week
+
+```{r, echo = F}
+df_week <- df_clean %>%
+  group_by(year) %>%
+  count(day_week) %>%
+  mutate(sum_n = sum(n),
+         prop = n / sum_n, 
+         pct = round(prop*100, 1))
+
+
+day_week_graph <- ggplot(df_week, aes(x = day_week, y = pct)) + 
+  geom_col(position = "dodge2", fill = "#fc4c02") + # strava orange
+  theme_classic() + 
+  facet_wrap(~year, ncol = 1) + 
+  labs(
+    title = "Percentage of Total Yearly Mileage by Day of the Week", 
+    y = "%",
+    x = "Day of the Week") 
+
+day_week_graph
+
+
+```
+
+### Strava Data
+
+```{r table}
+df_new <- df_clean %>%
+  mutate(total_time_new = as.character(total_time)) %>%
+  select(date, year, month, day, miles, total_time_new, max_heartrate)
+
+DT::datatable(df_new, options = list(
+  pageLength = 25, 
+  height = "600px"
+  )
+)
+
+```
+
