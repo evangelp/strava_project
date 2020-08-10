@@ -30,11 +30,11 @@ df <- readRDS("strava_df.rds")
 
 Sidebar {.sidebar}
 ======================================================================
-This flexdashboard displays my personal activity data from Strava, a social media app to upload any outdoor activities such as running, hiking, swimming, etc. Hover over points on the main plot to see individual dates, mileage and time. The table also displays each individual run activity and attritubes such as the time and maximum heart rate.
+This flexdashboard displays my personal activity data from Strava, a social media app to upload any outdoor activities such as running, hiking, swimming, etc. Hover over points on the main plot to see individual dates, mileage and time. The table also displays each individual run activity and attritubes such as the total time and maximum heart rate.
 
-The main goal of this was: to visualize patterns in my running as a motivator to get back into running and to start learning dashboard visualizations. My mileage has never consistently increased save for preparation for the LA Marathon. I also seem to really dislike running on Mondays pretty consistently between now and 2018.
+The main goal of this was: to visualize patterns in my running as a motivator to get back into running and to start learning dashboard visualizations. My mileage has never consistently increased save for preparation for the LA Marathon. I also seem to really dislike running on Mondays pretty consistently in the past three years.
 
-I hope to extend this project further into a more reactive Shiny application, hopefully increase my mileage in the meantime and see if I can get myself to run earlier in the week!
+I hope to extend this project further into a more reactive Shiny application, increase my mileage in the meantime and see if I can get myself to run earlier in the week!
 
 Author: Evangel Penumaka
 ======================================================================
